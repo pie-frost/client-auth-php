@@ -5,6 +5,7 @@ namespace PIEFrost\ClientAuth\Tests;
 use DateInterval;
 use DateTime;
 use ParagonIE\ConstantTime\Base32Hex;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\Paserk\Operations\Key\SealingPublicKey;
 use ParagonIE\Paserk\Operations\Key\SealingSecretKey;
 use ParagonIE\Paserk\Types\Seal;
@@ -45,7 +46,7 @@ class ClientTest extends TestCase
 
     public function testCreateAuthRequestToken()
     {
-        $challenge = Base32Hex::encodeUnpadded(random_bytes(20));
+        $challenge = Base64UrlSafe::encodeUnpadded(random_bytes(32));
         $client = Client::fromConfig($this->config);
         $requestToken = $client->createAuthRequestToken(
             $challenge,
@@ -56,7 +57,7 @@ class ClientTest extends TestCase
 
     public function testDecrypt()
     {
-        $challenge = Base32Hex::encodeUnpadded(random_bytes(20));
+        $challenge = Base64UrlSafe::encodeUnpadded(random_bytes(32));
         $userID = Base32Hex::encodeUnpadded(random_bytes(20));
 
         $client = Client::fromConfig($this->config);
@@ -68,7 +69,8 @@ class ClientTest extends TestCase
                     'domain' => 'phpunit.localhost',
                     'userid' => $userID
                 ]
-            )
+            ),
+            $challenge
         );
 
         $this->assertSame('phpunit.localhost', $user->getDomain());

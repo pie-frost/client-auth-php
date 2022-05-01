@@ -24,6 +24,8 @@ use ParagonIE\Paseto\{
     Rules\ForAudience,
     Rules\NotExpired
 };
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use PIEFrost\ClientAuth\Exception\AuthFailedException;
 use SodiumException;
 use TypeError;
 
@@ -74,12 +76,15 @@ class Client
     }
 
     /**
+     * @throws AuthFailedException
      * @throws InvalidVersionException
      * @throws PaserkException
      * @throws PasetoException
      */
-    final public function processAuthResponse(string $paseto): User
-    {
+    final public function processAuthResponse(
+        string $paseto,
+        string $challenge
+    ): User {
         /* Validate the server response against the public key */
         $outerToken = $this->server->parseToken($paseto);
 
@@ -90,8 +95,46 @@ class Client
             $outerToken->get('sealed')
         );
 
+        /* Validate the token was minted for us: */
+        $this->verifyChallenge($challenge, $innerToken);
+        $this->verifyOrgDomain($innerToken);
+
         /* Return a user object */
         return User::fromToken($innerToken);
+    }
+
+    /**
+     * You can override this in a child class to disable organization verification
+     * or to add multiple valid domain names (e.g. different TLDs).
+     *
+     * By default, we only allow the one.
+     *
+     * @throws AuthFailedException
+     * @throws PasetoException
+     */
+    protected function verifyOrgDomain(JsonToken $innerToken): void
+    {
+        $org = $innerToken->get('org');
+        if (!hash_equals($this->clientDomain, $org)) {
+            throw new AuthFailedException(
+                "Domain mismatch. Expected: {$this->clientDomain}; Actual: {$org}");
+        }
+    }
+
+    /**
+     * You can (but SHOULDN'T) override this in a child class to disable challenge/response
+     * authentication.
+     *
+     * There's almost no real-world benefit to doing this.
+     *
+     * @throws AuthFailedException
+     * @throws PasetoException
+     */
+    protected function verifyChallenge(string $challenge, JsonToken $innerToken): void
+    {
+        if (!hash_equals($challenge, $innerToken->get('challenge'))) {
+            throw new AuthFailedException("Challenge/response authentication failed");
+        }
     }
 
     /**
@@ -114,6 +157,11 @@ class Client
             ->setKey($key)
             ->addRule(new NotExpired())
             ->addRule(new ForAudience($this->clientDomain));
+    }
+
+    final public function getAuthServer(): AuthServer
+    {
+        return $this->server;
     }
 
     /**
