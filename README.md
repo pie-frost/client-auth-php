@@ -189,7 +189,7 @@ The workflow looks like this:
    2. This random one-time key is then [encrypted with your application's public key, using PASERK `k4.seal`](https://github.com/paseto-standard/paserk/blob/master/types/seal.md).
    3. Both of the above elements are bundled together and [signed by the server into a `v4.public` PASETO](https://github.com/paseto-standard/paseto-spec/blob/master/docs/01-Protocol-Versions/Version4.md#sign).
       This gets provided to the suer.
-5. The user is redirected to your callback URL.
+5. The user is redirected to your callback URL, with the token from step 4.
 6. The server response is verified and deserialized.
    1. The outer `v4.public` PASETO's signature is verified.
    2. The one-time key is decrypted using your application's secret key.
