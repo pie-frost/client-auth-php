@@ -220,3 +220,5 @@ Design decisions made:
    order for the challenge to be verified client-side.
 5. All algorithm implementations are provided by [libsodium](https://doc.libsodium.org).
 6. There is no runtime negotiation of any algorithm choices.
+7. The X25519 keys are derived from the Ed25519 keys (through birational equivalence), so only one keypair
+   needs to be managed for each party. 
