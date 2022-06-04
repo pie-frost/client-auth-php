@@ -15,8 +15,8 @@
     "php": "^8.1",
     "guzzlehttp/guzzle": "^7",
     "paragonie/certainty": "^2",
-    "paragonie/paseto": "^2",
-    "paragonie/paserk": "^0.2",
+    "paragonie/paseto": "^3",
+    "paragonie/paserk": "^2",
     "psr/http-message": "^1",
     "psr/http-server-handler": "^1"
   },
